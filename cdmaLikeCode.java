@@ -21,6 +21,8 @@ public class cdmaLikeCode {
     private int n_bits;
     private String message;
     private int dataShards, parityShards, shardSize;
+    private int n_patterns;
+    private int[][][] patterns;
 
     public void configure(String configureFilePath) throws IOException {
         String configString;
@@ -42,9 +44,31 @@ public class cdmaLikeCode {
         dataShards = objConfig.getInt("dataShards");
         parityShards = objConfig.getInt("parityShards");
         shardSize = objConfig.getInt("shardSize");
+        matrix = new int[totalY * patternWidth][totalX * patternWidth];
+        n_patterns = (int)Math.pow(2, n_bits);
+        patterns = new int[n_patterns][patternWidth][patternWidth];
+        JSONArray patternsJSONArray = objConfig.getJSONArray("patterns");
+        for (int i = 0; i < n_patterns; i++) {
+            JSONArray patternJSONArray = patternsJSONArray.getJSONArray(i);
+            for (int j = 0; j < patternWidth; j++) {
+                JSONArray rowJSONArray = patternJSONArray.getJSONArray(j);
+                for (int k = 0; k < patternWidth; k++) {
+                    patterns[i][j][k] = rowJSONArray.getInt(k);
+                }
+            }
+        }
     }
 
     public static void main(String[] args) {
+        cdmaLikeCode myCdmaLikeCode = new cdmaLikeCode();
+        try {
+            myCdmaLikeCode.configure("/home/yi/IdeaProjects/cdma-like-code/src/com/zy/vlc/cdma_config.json");
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+        myCdmaLikeCode.generateCodeImage("/home/yi/Pictures/test.bmp");
+        /*
         // get configuration
         String configString;
         try {
@@ -122,11 +146,45 @@ public class cdmaLikeCode {
             ImageIO.write(res, "bmp", new File("/home/yi/Pictures/test.bmp"));
         } catch (IOException e) {
             e.printStackTrace();
-        }
+        }*/
     }
 
     private void generateCodeImage(String outputFile) {
-
+        final BufferedImage res = new BufferedImage(length, height, BufferedImage.TYPE_INT_BGR);
+        for (int x = 0; x < length; x++) {
+            for (int y = 0; y < height; y++) {
+                res.setRGB(x, y, Color.WHITE.getRGB());
+            }
+        }
+        byte[] byteArray;
+        byteArray = getByteArray(message, dataShards, parityShards, shardSize);
+        matrix = getTotalPattern(matrix, totalX, totalY, patternWidth, byteArray, n_bits, patterns);
+        for (int x = 0; x < length; x++) {
+            for (int y = 0; y < height; y++) {
+                int xCell = (int)((double)(x + 1) / length * (totalX * patternWidth));
+                int yCell = (int)((double)(y + 1) / height * (totalY * patternWidth));
+                if (xCell == totalX * patternWidth) {
+                    xCell--;
+                }
+                if (yCell == totalY * patternWidth) {
+                    yCell--;
+                }
+                //System.out.println(x);
+                //System.out.println(y);
+                //System.out.println(xCell);
+                //System.out.println(yCell);
+                if (matrix[yCell][xCell] == 1) {
+                    res.setRGB(x, y, Color.BLACK.getRGB());
+                } else {
+                    res.setRGB(x, y, Color.WHITE.getRGB());
+                }
+            }
+        }
+        try {
+            ImageIO.write(res, "bmp", new File(outputFile));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private int[][] getTotalPattern(int[][] matrix, int totalX, int totalY, int patternWidth, byte[] byteArray, int n_bits, int[][][] patterns) {
