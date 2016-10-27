@@ -67,124 +67,50 @@ public class cdmaLikeCode {
             e.printStackTrace();
             return;
         }
-        myCdmaLikeCode.generateCodeImage("/home/yi/Pictures/test.bmp");
-        /*
-        // get configuration
-        String configString;
-        try {
-            configString = new String(Files.readAllBytes(Paths.get("/home/yi/IdeaProjects/cdma-like-code/src/com/zy/vlc/cdma_config.json")));
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
-        JSONObject objConfig;
-        objConfig = new JSONObject(configString);
-        // get attributes of the configuration
-        // get the length and the height of the output picture and init the picture
-        int length, height;
-        length = objConfig.getInt("length");
-        height = objConfig.getInt("height");
-        final BufferedImage res = new BufferedImage(length, height, BufferedImage.TYPE_INT_BGR);
-        for (int x = 0; x < length; x++) {
-            for (int y = 0; y < height; y++) {
-                res.setRGB(x, y, Color.WHITE.getRGB());
-            }
-        }
-        //matrix: 0 for the cell is white and 1 for the cell is black
-        int totalX, totalY;
-        int patternWidth;
-        patternWidth = objConfig.getInt("patternWidth");
-        totalX = objConfig.getInt("x");
-        totalY = objConfig.getInt("y");
-        int[][] matrix = new int[totalY * patternWidth][totalX * patternWidth];
-        //get the patterns
-        JSONArray patternsJSONArray = objConfig.getJSONArray("patterns");
-        int n_bits = objConfig.getInt("n_bits");
-        int n_patterns = (int)Math.pow(2, n_bits);
-        int[][][] patterns = new int[n_patterns][patternWidth][patternWidth];
-        for (int i = 0; i < n_patterns; i++) {
-            JSONArray patternJSONArray = patternsJSONArray.getJSONArray(i);
-            for (int j = 0; j < patternWidth; j++) {
-                JSONArray rowJSONArray = patternJSONArray.getJSONArray(j);
-                for (int k = 0; k < patternWidth; k++) {
-                    patterns[i][j][k] = rowJSONArray.getInt(k);
-                }
-            }
-        }
-        //get byteArray
-        String message = objConfig.getString("message");
-        int dataShards, parityShards, shardSize;
-        byte[] byteArray;
-        dataShards = objConfig.getInt("dataShards");
-        parityShards = objConfig.getInt("parityShards");
-        shardSize = objConfig.getInt("shardSize");
-        byteArray = getByteArray(message, dataShards, parityShards, shardSize);
-        // get the bit map for the whole image
-        matrix = getTotalPattern(matrix, totalX, totalY, patternWidth, byteArray, n_bits, patterns);
-        for (int x = 0; x < length; x++) {
-            for (int y = 0; y < height; y++) {
-                int xCell = (int)((double)(x + 1) / length * (totalX * patternWidth));
-                int yCell = (int)((double)(y + 1) / height * (totalY * patternWidth));
-                if (xCell == totalX * patternWidth) {
-                    xCell--;
-                }
-                if (yCell == totalY * patternWidth) {
-                    yCell--;
-                }
-                //System.out.println(x);
-                //System.out.println(y);
-                //System.out.println(xCell);
-                //System.out.println(yCell);
-                if (matrix[yCell][xCell] == 1) {
-                    res.setRGB(x, y, Color.BLACK.getRGB());
-                } else {
-                    res.setRGB(x, y, Color.WHITE.getRGB());
-                }
-            }
-        }
-        try {
-            ImageIO.write(res, "bmp", new File("/home/yi/Pictures/test.bmp"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }*/
+        myCdmaLikeCode.generateCodeImage("/home/yi/Pictures/");
     }
 
-    private void generateCodeImage(String outputFile) {
-        final BufferedImage res = new BufferedImage(length, height, BufferedImage.TYPE_INT_BGR);
-        for (int x = 0; x < length; x++) {
-            for (int y = 0; y < height; y++) {
-                res.setRGB(x, y, Color.WHITE.getRGB());
-            }
-        }
-        byte[] byteArray;
-        byteArray = getByteArray(message, dataShards, parityShards, shardSize);
-        matrix = getTotalPattern(matrix, totalX, totalY, patternWidth, byteArray, n_bits, patterns);
-        for (int x = 0; x < length; x++) {
-            for (int y = 0; y < height; y++) {
-                int xCell = (int)((double)(x + 1) / length * (totalX * patternWidth));
-                int yCell = (int)((double)(y + 1) / height * (totalY * patternWidth));
-                if (xCell == totalX * patternWidth) {
-                    xCell--;
-                }
-                if (yCell == totalY * patternWidth) {
-                    yCell--;
-                }
-                //System.out.println(x);
-                //System.out.println(y);
-                //System.out.println(xCell);
-                //System.out.println(yCell);
-                if (matrix[yCell][xCell] == 1) {
-                    res.setRGB(x, y, Color.BLACK.getRGB());
-                } else {
+    private void generateCodeImage(String outputFileDir) {
+        byte[][] byteArrays;
+        byteArrays = getByteArrays(message, dataShards, parityShards, shardSize);
+        for (int i = 0; i < byteArrays.length; i++) {
+            final BufferedImage res = new BufferedImage(length, height, BufferedImage.TYPE_INT_BGR);
+            for (int x = 0; x < length; x++) {
+                for (int y = 0; y < height; y++) {
                     res.setRGB(x, y, Color.WHITE.getRGB());
                 }
             }
+            matrix = getTotalPattern(matrix, totalX, totalY, patternWidth, byteArrays[i], n_bits, patterns);
+            for (int x = 0; x < length; x++) {
+                for (int y = 0; y < height; y++) {
+                    int xCell = (int)((double)(x + 1) / length * (totalX * patternWidth));
+                    int yCell = (int)((double)(y + 1) / height * (totalY * patternWidth));
+                    if (xCell == totalX * patternWidth) {
+                        xCell--;
+                    }
+                    if (yCell == totalY * patternWidth) {
+                        yCell--;
+                    }
+                    //System.out.println(x);
+                    //System.out.println(y);
+                    //System.out.println(xCell);
+                    //System.out.println(yCell);
+                    if (matrix[yCell][xCell] == 1) {
+                        //System.out.println(x);
+                        //System.out.println(y);
+                        res.setRGB(x, y, Color.BLACK.getRGB());
+                    } else {
+                        res.setRGB(x, y, Color.WHITE.getRGB());
+                    }
+                }
+            }
+            try {
+                ImageIO.write(res, "bmp", new File(outputFileDir + "test" + i + ".bmp"));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
-        try {
-            ImageIO.write(res, "bmp", new File(outputFile));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
     }
 
     private int[][] getTotalPattern(int[][] matrix, int totalX, int totalY, int patternWidth, byte[] byteArray, int n_bits, int[][][] patterns) {
@@ -216,18 +142,34 @@ public class cdmaLikeCode {
         return matrix;
     }
 
-    private byte[] getByteArray(String message, int dataShards, int parityShards, int shardSize) {
-        byte[][] shards = new byte[dataShards + parityShards][shardSize];
+    private byte[][] getByteArrays(String message, int dataShards, int parityShards, int shardSize) {
+        int capacity = dataShards * (shardSize - 1);
+        int numImages = message.length() / capacity;
+        if (message.length() % capacity > 0) {
+            numImages++;
+        }
+        byte[][] byteArrays = new byte[numImages][(dataShards + parityShards) * shardSize];
         byte[] byteArray = message.getBytes();
-        for (int i = 0; i < dataShards; i++) {
-            System.arraycopy(byteArray, i * shardSize, shards[i], 0, shardSize);
+        for (int i = 0; i < numImages; i++) {
+            byte[] byteArrayThisImage = new byte[capacity];
+            int copyLen;
+            if (i == numImages - 1 && message.length() % capacity != 0) {
+                copyLen = message.length() % capacity;
+            } else {
+                copyLen = capacity;
+            }
+            System.arraycopy(byteArray, i * capacity, byteArrayThisImage, 0, copyLen);
+            byte[][] shards = new byte[dataShards + parityShards][shardSize - 1];
+            for (int j = 0; j < dataShards; j++) {
+                System.arraycopy(byteArrayThisImage, j * (shardSize - 1), shards[j], 0, shardSize - 1);
+            }
+            ReedSolomon reedSolomon = ReedSolomon.create(dataShards, parityShards);
+            reedSolomon.encodeParity(shards, 0, shardSize - 1);
+            for (int j = 0; j < (dataShards + parityShards); j++) {
+                System.arraycopy(shards[j], 0, byteArrays[i], j * shardSize, shardSize - 1);
+                byteArrays[i][(j + 1) * shardSize - 1] = (byte)(byteArrays[i][(j + 1) * shardSize - 2] + byteArrays[i][(j + 1) * shardSize - 3] + byteArrays[i][(j + 1) * shardSize - 4]);
+            }
         }
-        ReedSolomon reedSolomon = ReedSolomon.create(dataShards, parityShards);
-        reedSolomon.encodeParity(shards, 0, shardSize);
-        byte[] resultBytes = new byte[(dataShards + parityShards) * shardSize];
-        for (int i = 0; i < (dataShards + parityShards); i++) {
-            System.arraycopy(shards[i], 0, resultBytes, i * shardSize, shardSize);
-        }
-        return resultBytes;
+        return byteArrays;
     }
 }
